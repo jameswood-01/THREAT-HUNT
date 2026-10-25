@@ -1,4 +1,4 @@
-   ![Banner](threat-hunt-banner.png)
+![Banner](kql-threat-hunts-banner.png)
 # KQL Threat Hunts
 
 Hands-on threat hunting in **Microsoft Sentinel** and **Defender XDR** using **KQL (Kusto Query Language)**.
