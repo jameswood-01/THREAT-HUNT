@@ -1,4 +1,11 @@
 ![Banner](kql-threat-hunts-banner.png)
+
+[![Microsoft Sentinel](https://img.shields.io/badge/Microsoft%20Sentinel-0078D4?style=for-the-badge)](https://learn.microsoft.com/en-us/azure/sentinel/)
+[![Defender XDR](https://img.shields.io/badge/Defender%20XDR-1F4E9E?style=for-the-badge)](https://learn.microsoft.com/en-us/defender-xdr/)
+[![KQL](https://img.shields.io/badge/KQL-5E5E5E?style=for-the-badge)](https://learn.microsoft.com/en-us/kusto/query/)
+[![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-C0392B?style=for-the-badge)](https://attack.mitre.org/)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
+
 # KQL Threat Hunts
 
 Hands-on threat hunting in **Microsoft Sentinel** and **Defender XDR** using **KQL (Kusto Query Language)**.
