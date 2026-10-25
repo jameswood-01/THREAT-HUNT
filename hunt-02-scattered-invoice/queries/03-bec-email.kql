@@ -1,0 +1,9 @@
+// Hunt 02 - Scattered Invoice | Stage 3: BEC email (EmailEvents)
+// Note: the IP column here is SenderIPv4, not IPAddress
+
+EmailEvents
+| where Timestamp between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-26T00:00:00Z))
+| where SenderFromAddress =~ "m.smith@lognpacific.org"
+| where SenderIPv4 == "205.147.16.190"
+| project Timestamp, RecipientEmailAddress, Subject, DeliveryAction, EmailDirection, NetworkMessageId
+| order by Timestamp asc

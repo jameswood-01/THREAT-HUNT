@@ -1,0 +1,27 @@
+// Hunt 02 - Scattered Invoice | Stage 5: Correlation and baselining
+
+// 5a. Pivot on the attacker session ID across tables
+let sid = "00225cfa-a0ff-fb46-a079-5d152fcdf72a";
+union
+  (SigninLogs | where SessionId == sid
+     | project Time=TimeGenerated, Source="SigninLogs", Action=tostring(ResultType), IPAddress),
+  (CloudAppEvents | where RawEventData has sid
+     | project Time=Timestamp, Source="CloudAppEvents", Action=ActionType, IPAddress)
+| order by Time asc
+
+// 5b. Baseline: attacker IP vs the user's legitimate IP
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-26T00:00:00Z))
+| where UserPrincipalName =~ "m.smith@lognpacific.org"
+| summarize Total=count(),
+            Success=countif(ResultType == "0"),
+            MFA_Challenges=countif(ResultType == "50074"),
+            Other_Fail=countif(ResultType !in ("0", "50074")),
+            First=min(TimeGenerated), Last=max(TimeGenerated)
+            by IPAddress,
+               Country=tostring(LocationDetails.countryOrRegion),
+               City=tostring(LocationDetails.city),
+               OS=tostring(DeviceDetail.operatingSystem),
+               Browser=tostring(DeviceDetail.browser),
+               Compliant=tostring(DeviceDetail.isCompliant),
+               AutonomousSystemNumber

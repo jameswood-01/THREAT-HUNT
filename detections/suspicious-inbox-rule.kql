@@ -1,0 +1,10 @@
+// Detection: Suspicious inbox rule (forward or delete + stop processing)
+// MITRE ATT&CK: T1564.008 Email Hiding Rules, T1114.003 Email Forwarding Rule
+// Logic: new or changed inbox rule that forwards or deletes mail and blocks later rules
+
+CloudAppEvents
+| where ActionType in ("New-InboxRule", "Set-InboxRule")
+| where RawEventData has "StopProcessingRules"
+      and (RawEventData has "ForwardTo" or RawEventData has "DeleteMessage")
+| extend Raw = parse_json(RawEventData)
+| project Timestamp, User = tostring(Raw.UserId), IPAddress, ActionType, Parameters = Raw.Parameters

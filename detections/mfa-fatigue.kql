@@ -1,0 +1,11 @@
+// Detection: MFA fatigue / push bombing
+// MITRE ATT&CK: T1621 Multi-Factor Authentication Request Generation
+// Logic: 5+ uncompleted MFA challenges and a success for one user + IP within 15 minutes
+// Tune the threshold and bin size to your environment.
+
+SigninLogs
+| where TimeGenerated > ago(1h)
+| summarize Prompts = countif(ResultType == "50074"),
+            Success = countif(ResultType == "0")
+            by UserPrincipalName, IPAddress, bin(TimeGenerated, 15m)
+| where Prompts >= 5 and Success >= 1

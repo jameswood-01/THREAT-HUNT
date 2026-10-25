@@ -1,0 +1,63 @@
+// Hunt 02 - Scattered Invoice | Stage 1: Initial access (SigninLogs)
+
+// 1a. Find the account as logged
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-26T00:00:00Z))
+| where UserPrincipalName has "mark" or UserDisplayName has "Mark Smith"
+| summarize Attempts=count() by UserPrincipalName, UserDisplayName, IPAddress
+| order by Attempts desc
+
+// 1b. Result codes present (spot decoys: 50140 is a UI interrupt, not MFA)
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-26T00:00:00Z))
+| where UserPrincipalName =~ "m.smith@lognpacific.org"
+| summarize Count=count() by ResultType, ResultDescription
+| order by Count desc
+
+// 1c. Attacker sign-in timeline
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-26T00:00:00Z))
+| where UserPrincipalName =~ "m.smith@lognpacific.org"
+| where IPAddress == "205.147.16.190"
+| project TimeGenerated, ResultType, ResultDescription, SessionId
+| order by TimeGenerated asc
+
+// 1d. MFA denials (50074) before the first approval (fatigue intensity)
+let Approval = toscalar(
+    SigninLogs
+    | where TimeGenerated between (datetime(2026-02-25T21:44:00Z) .. datetime(2026-02-25T22:31:00Z))
+    | where UserPrincipalName =~ "m.smith@lognpacific.org" and IPAddress == "205.147.16.190"
+    | where ResultType == "0"
+    | summarize min(TimeGenerated));
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:44:00Z) .. Approval)
+| where UserPrincipalName =~ "m.smith@lognpacific.org" and IPAddress == "205.147.16.190"
+| where ResultType == "50074"
+| count
+
+// 1e. Gap between MFA challenges
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-26T00:00:00Z))
+| where UserPrincipalName =~ "m.smith@lognpacific.org" and IPAddress == "205.147.16.190"
+| where ResultType == "50074"
+| order by TimeGenerated asc
+| serialize
+| extend Gap = TimeGenerated - prev(TimeGenerated),
+         MinutesSincePrev = datetime_diff('minute', TimeGenerated, prev(TimeGenerated))
+| project TimeGenerated, Gap, MinutesSincePrev
+
+// 1f. MFA method detail
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:44:00Z) .. datetime(2026-02-25T22:31:00Z))
+| where UserPrincipalName =~ "m.smith@lognpacific.org" and IPAddress == "205.147.16.190"
+| mv-expand AuthenticationDetails
+| extend Method = tostring(AuthenticationDetails.authenticationMethod),
+         StepResult = tostring(AuthenticationDetails.authenticationStepResultDetail)
+| project TimeGenerated, ResultType, Method, StepResult
+
+// 1g. Conditional Access on the successful sign-in (success / failure / notApplied)
+SigninLogs
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-26T00:00:00Z))
+| where UserPrincipalName =~ "m.smith@lognpacific.org" and IPAddress == "205.147.16.190"
+| where ResultType == "0"
+| project TimeGenerated, ConditionalAccessStatus, ConditionalAccessPolicies, SessionId
