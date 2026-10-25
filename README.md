@@ -22,20 +22,6 @@ Rules built from hunt findings, aimed at attacker **behaviour** (TTPs) rather th
 | [MFA fatigue](detections/mfa-fatigue.kql) | Repeated MFA prompts followed by a success | T1621 |
 | [Suspicious inbox rule](detections/suspicious-inbox-rule.kql) | New rules that forward or delete mail and stop processing | T1564.008, T1114.003 |
 
-## Repo layout
-
-```
-kql-threat-hunts/
-├── README.md                     ← this page
-├── detections/                   ← reusable detection rules
-├── docs/
-│   └── kql-cheatsheet.md         ← operators and patterns used across hunts
-└── hunt-02-scattered-invoice/
-    ├── README.md                 ← investigation write-up
-    ├── report.pdf                ← formatted report
-    └── queries/                  ← every query, by investigation stage
-```
-
 ## Skills demonstrated
 
 - KQL: filtering, `summarize`, `mv-expand`, `parse_json`, `serialize` + `prev()`, `let` / `toscalar`, `union`
